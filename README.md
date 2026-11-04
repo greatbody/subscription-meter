@@ -1,64 +1,75 @@
 # Subscription Meter
 
-Subscription Meter 是一个原生 macOS 菜单栏工具，用来集中查看 AI 服务的订阅用量和预付余额。菜单栏以服务图标和圆环轮播状态，点击后可查看各服务的详细数据。每个服务由独立适配器获取数据。
+[English](README.en.md) · 简体中文
 
-## 功能
+Subscription Meter 是一款原生 macOS 菜单栏应用，在一个地方查看 AI 服务的订阅用量和预付余额。它在菜单栏轮播服务图标与用量圆环，点击可查看详情、刷新或打开设置。界面目前为中文。
 
-- 显示用量百分比、重置时间或账户余额；获取失败时显示原因。
-- 可选择显示服务名称，并调整名称宽度、滚动速度、轮播间隔和数据刷新频率。
-- 用量圆环在显示用量达到 70% 时变为橙色、达到 90% 时变为红色；未连接时显示灰色。
-- Codex、Claude 的周窗口和 Copilot 的月窗口中，如果时间进度超过用量进度，用灰色显示两者的差距。重置时间缺失或已过期时不显示时间进度。
-- 余额服务可设置各自的数字参考容量，以蓝色圆环显示余额占参考容量的比例；超出参考容量时显示金色满环，不使用订阅用量的颜色阈值。
-- 可在设置中启用登录时启动，登录 macOS 用户账户后应用会启动。若 macOS 要求授权，可从设置页打开系统登录项设置。
+![Subscription Meter 图标](design/app-icon-concept.png)
 
-## 系统要求和构建
+界面截图尚未提供。
 
-需要 macOS 13 或更高版本，以及安装 Xcode 或 Xcode Command Line Tools 的构建环境。构建脚本生成 Apple Silicon 和 Intel 通用应用，并使用本地 ad-hoc 签名，无需 Apple 开发者账号。
+## 支持的服务
 
-在项目目录运行：
+| 服务 | 显示内容 | 连接方式和限制 |
+| --- | --- | --- |
+| GitHub Copilot | 月度高级请求或 credits 用量 | 安装 [GitHub CLI](https://cli.github.com/)，运行 `gh auth login`；使用非公开的 Copilot 接口。 |
+| ChatGPT / Codex | Codex 返回的用量窗口和重置时间 | 安装 [Codex CLI](https://github.com/openai/codex)，运行 `codex login`；不代表 ChatGPT 所有功能的用量。 |
+| Anthropic / Claude | 5 小时及每周用量窗口 | 安装并登录 [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview)，在设置中启用；依赖非公开接口，尚未使用真实 Claude 订阅端到端验证。 |
+| DeepSeek | API 预付余额和币种明细 | 在 `~/.env` 中设置 `DEEPSEEK_API_KEY`；请求官方余额接口。 |
+| 硅基流动 | 国内站现金余额，不含代金券 | 在设置中打开登录窗口，登录并进入账单余额页；依赖网站内部接口和页面结构。 |
+
+可在“设置 → 服务”关闭不需要的服务。各服务返回的数据取决于账户和套餐；非公开接口或网页变更可能导致功能失效。
+
+## 从源码构建
+
+需要 macOS 13 或更高版本、支持 Swift 5.9 的 Apple 工具链，以及 `sips`、`iconutil` 和 `codesign`。通用二进制同时构建 Intel 和 Apple Silicon 版本。当前构建已在 Intel Mac、Xcode 26.5 / Swift 6.3.2 上验证；单独安装 Command Line Tools 的环境尚未验证。运行 JavaScript 测试还需要 Node.js。
+
+克隆仓库（将占位符替换为实际仓库地址），然后进入项目目录：
 
 ```sh
+git clone <repository-url> subscription-meter
+cd subscription-meter
 scripts/build-app.sh
 open 'build/Subscription Meter.app'
 ```
 
-首次启动会显示设置窗口。应用常驻菜单栏，点击圆环展开详情，面板底部可打开设置或退出。建议将生成的应用复制到固定位置后再启用登录时启动；重新构建不会自动更新其他位置的副本。本项目目前没有发布安装包；本地签名的构建也未经过 Apple 公证。
+脚本生成 `build/Subscription Meter.app`，使用本地 ad-hoc 签名，未经 Apple 公证；首次打开时 macOS 可能要求在系统设置中允许打开。首次启动会显示设置窗口，之后从菜单栏图标进入详情与设置。该项目目前没有发布的安装包。
 
-## 连接服务
+如需固定安装位置，先从菜单栏退出应用，然后将生成的 App 复制到 `~/Applications`。如果该位置已有同名 App，请先备份或移走旧版本；重新构建不会自动更新已安装的副本。登录时启动可在 App 设置中开启，建议先固定安装位置；如系统要求批准，请在系统登录项设置中确认。
 
-在“设置 → 服务”中启用需要的服务；各账户的套餐和组织配置可能返回不同数据。
+## 连接与隐私
 
-| 服务 | 连接方式 | 展示内容与限制 |
-| --- | --- | --- |
-| GitHub Copilot | 安装 GitHub CLI，运行 `gh auth login` 并登录有 Copilot 的账户。 | 月度 credits 或高级请求用量。使用的 Copilot 接口并非稳定公开契约，可能变化。 |
-| ChatGPT / Codex | 安装 Codex CLI，运行 `codex login` 并登录 ChatGPT。 | 通过本机 `codex app-server` 读取 Codex 额度；它不代表 ChatGPT 所有功能的用量。只显示接口返回的窗口。 |
-| Anthropic / Claude | 安装并登录 Claude Code，在设置中启用 Claude（默认关闭）。 | 使用 Claude Code 凭据和用量接口；钥匙串可能请求授权。该接口并非稳定公开契约，尚未使用真实 Claude 订阅端到端验证。 |
-| DeepSeek | 在 `~/.env` 中设置 `DEEPSEEK_API_KEY`。 | 查询官方 API 的可用余额及币种明细。应用只解析该变量，不执行整个文件；请求发生重定向时会停止。 |
-| 硅基流动 | 在“设置 → 服务”中打开登录窗口，自行登录国内站并进入账单的余额页面。 | 读取并核对现金余额，不含代金券。依赖网站内部接口和页面结构，网站改版或登录过期后可能需要重新登录或更新适配器。 |
-
-DeepSeek 的配置示例（用自己的密钥替换占位符，避免提交到版本控制）：
+在“设置 → 服务”启用所需服务并完成登录。DeepSeek 从用户主目录的 `~/.env` 读取以下变量，不执行该文件；使用自己的密钥，勿提交到 Git：
 
 ```dotenv
-DEEPSEEK_API_KEY=你的密钥
+DEEPSEEK_API_KEY=your_api_key_here
 ```
 
-应用从本机读取现有凭据，DeepSeek 密钥仅发送至其官方余额接口；硅基流动使用应用内持久网页会话，不读取其他浏览器的 Cookie。设置保存在本机。不要把密钥、登录信息或账户数据放进问题报告。
+- Copilot 通过本地 `gh` 调用 GitHub；Codex 通过本地 `codex app-server` 获取账户额度。
+- Claude 从钥匙串或 `~/.claude/.credentials.json` 读取 Claude Code 凭据，并向 Anthropic 用量接口发出请求；钥匙串可能要求授权。
+- DeepSeek 密钥只发送至 `https://api.deepseek.com/user/balance`，遇到重定向时停止请求。
+- 硅基流动使用应用自己的持久 WebKit 会话登录 `siliconflow.cn`；不读取其他浏览器的 Cookie。余额功能依赖该站点的账单页面和内部接口。
+- 设置保存在本机 UserDefaults 中。报告问题时请移除凭据、Cookie、账户信息和个人数据，勿粘贴完整命令输出或截图中的敏感信息。
 
-## 余额参考容量
+## 显示和余额
 
-在“设置 → 余额”中分别为 DeepSeek 和硅基流动填写大于零的数字。例如参考容量为 500、余额为 250 时，圆环以蓝色显示 50%；余额达到 90% 或恰好 100% 时仍为蓝色，严格大于 500 时显示金色满环。每个币种的余额分别使用该服务的同一个参考容量计算，不进行货币转换或跨币种求和。
+用量圆环在达到 70% 时变橙色、达到 90% 时变红色；无数据或连接失败时显示灰色，余额服务明确返回不可用时显示红色。部分周、月窗口还会以灰色表示时间进度与用量进度之间的差距。可在设置中调整名称显示、轮播与刷新间隔。
 
-未设置参考容量或连接失败时，圆环显示灰色；服务明确返回余额不可用时，圆环显示红色，表示不可用状态。DeepSeek 还可分别设置 CNY 和 USD 的低余额阈值；低于阈值时在详情中显示状态和颜色提示，圆环仍显示蓝色，不发送系统通知。
+“设置 → 余额”可为 DeepSeek 和硅基流动分别设置大于零的参考容量，余额与该数字比较后以蓝色圆环显示比例；超过参考容量时显示金色满环。不进行币种转换或跨币种汇总。DeepSeek 可按 CNY 和 USD 分别设置低余额阈值；提示显示在详情中，不发送系统通知。
 
-## 常见问题和卸载
+## 开发与验证
 
-如果提示找不到命令行工具，请确认工具已安装、可执行并登录了正确的账户。图形界面启动的应用不一定继承终端的 PATH；应用会检查 `/opt/homebrew/bin`、`/usr/local/bin`、`/usr/bin`、`~/.local/bin` 和自身 PATH。通过版本管理器安装的工具可能需要配置为应用可找到的位置。
+项目无第三方 Swift 包依赖。入口和常用目录：
 
-卸载前可在设置中关闭“登录时启动”，然后从菜单栏面板退出应用并删除应用文件。删除应用不会自动清除本地偏好、硅基流动网页会话或其他命令行工具的登录信息。
+| 路径 | 用途 |
+| --- | --- |
+| `Sources/main.swift` | App 生命周期、刷新调度和设置窗口 |
+| `Sources/UI/`、`Sources/Settings/` | 菜单栏、详情面板和设置 |
+| `Sources/Models/`、`Sources/Adapters/` | 数据模型与各服务适配器 |
+| `Tests/` | 独立的 Swift 测试及硅基流动页面脚本测试 |
+| `scripts/build-app.sh` | 双架构构建、图标生成和 App 打包 |
 
-## 开发和验证
-
-代码使用 Swift、SwiftUI 和 AppKit；适配器位于 `Sources/Adapters`，共用数据模型位于 `Sources/Models`。构建脚本见 `scripts/build-app.sh`。可运行以下检查：
+在仓库根目录执行：
 
 ```sh
 Tests/run-settings-tests.sh
@@ -67,8 +78,16 @@ Tests/run-balance-ui-tests.sh
 node Tests/silicon-dom-tests.js
 ```
 
-最后一项需要 Node.js。测试使用模拟数据，不能替代不同账户和套餐下的实际服务验证。
+这些检查使用模拟数据，不验证真实账户或服务端兼容性。前三项用 `swiftc` 编译临时测试程序；最后一项需要 Node.js，使用模拟 DOM 和网络响应。`Package.swift` 没有 SwiftPM test target，因此请运行上述脚本，而非依赖 `swift test`。
 
-## 图标与许可
+欢迎提交 issue 或 pull request。提交前请说明问题与复现步骤、修改范围及运行过的检查；适配器变更请提供不含凭据的模拟响应，并注明真实账户验证范围。涉及界面变更时请附脱敏截图。
 
-服务商图标的来源、许可和商标说明见 [Resources/ProviderIcons/NOTICE.md](Resources/ProviderIcons/NOTICE.md)。项目当前尚未附带软件许可证；图标各自的许可不自动适用于项目代码。
+## 排障和卸载
+
+- 找不到 `gh` 或 `codex`：在终端分别运行 `command -v gh`、`command -v codex` 检查安装，并确认已登录。图形应用不一定继承终端 PATH；应用还会检查 `/opt/homebrew/bin`、`/usr/local/bin`、`/usr/bin` 和 `~/.local/bin`。
+- 服务显示错误：检查对应登录状态、套餐权限和网络；非公开接口可能已变化。硅基流动可在设置中重新登录并打开余额页。
+- 卸载：先在设置中关闭登录时启动，再退出并删除 App。删除 App 不会自动清除本地偏好、WebKit 会话或 CLI 登录信息。
+
+## 许可证与第三方素材
+
+项目代码按 [MIT License](LICENSE) 发布。服务商图标来源和商标说明见 [NOTICE](Resources/ProviderIcons/NOTICE.md)；第三方品牌素材受各自条款约束，MIT 许可不授予其商标权或额外的素材使用权。
