@@ -24,10 +24,10 @@ Disable unwanted providers under 设置 → 服务 (Settings → Services). Avai
 
 Requires macOS 13 or later, an Apple toolchain supporting Swift 5.9, `sips`, `iconutil`, and `codesign`. The universal build targets Intel and Apple Silicon. It has been verified on an Intel Mac with Xcode 26.5 / Swift 6.3.2; a standalone Command Line Tools installation has not been verified. Node.js is needed for the JavaScript test.
 
-Clone the repository (replace the placeholder with its actual URL), then enter the project directory:
+Clone the repository, then enter the project directory:
 
 ```sh
-git clone <repository-url> subscription-meter
+git clone https://github.com/greatbody/subscription-meter.git
 cd subscription-meter
 scripts/build-app.sh
 open 'build/Subscription Meter.app'

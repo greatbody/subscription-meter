@@ -24,10 +24,10 @@ Subscription Meter 是一款原生 macOS 菜单栏应用，在一个地方查看
 
 需要 macOS 13 或更高版本、支持 Swift 5.9 的 Apple 工具链，以及 `sips`、`iconutil` 和 `codesign`。通用二进制同时构建 Intel 和 Apple Silicon 版本。当前构建已在 Intel Mac、Xcode 26.5 / Swift 6.3.2 上验证；单独安装 Command Line Tools 的环境尚未验证。运行 JavaScript 测试还需要 Node.js。
 
-克隆仓库（将占位符替换为实际仓库地址），然后进入项目目录：
+克隆仓库，然后进入项目目录：
 
 ```sh
-git clone <repository-url> subscription-meter
+git clone https://github.com/greatbody/subscription-meter.git
 cd subscription-meter
 scripts/build-app.sh
 open 'build/Subscription Meter.app'
