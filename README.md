@@ -20,6 +20,12 @@ Subscription Meter 是一款原生 macOS 菜单栏应用，在一个地方查看
 
 可在“设置 → 服务”关闭不需要的服务。各服务返回的数据取决于账户和套餐；非公开接口或网页变更可能导致功能失效。
 
+## 下载 nightly 版本
+
+在 [GitHub Releases](https://github.com/greatbody/subscription-meter/releases) 下载最新的 nightly 预发布版本，解压 `Subscription-Meter-macOS-universal.zip`，将 App 移到 `~/Applications` 后打开。该通用版本支持 Intel 和 Apple Silicon，要求 macOS 13 或更高版本。构建为 ad-hoc 签名，未经 Apple 公证；首次打开时 macOS 可能要求在系统设置中允许打开。可在下载目录运行 `shasum -a 256 -c SHA256SUMS.txt` 校验 ZIP。
+
+GitHub Actions 每天北京时间 03:23 构建默认分支，也可手动触发；每次运行生成独立的预发布版本。nightly 可能包含尚未稳定的变更。
+
 ## 从源码构建
 
 需要 macOS 13 或更高版本、支持 Swift 5.9 的 Apple 工具链，以及 `sips`、`iconutil` 和 `codesign`。通用二进制同时构建 Intel 和 Apple Silicon 版本。当前构建已在 Intel Mac、Xcode 26.5 / Swift 6.3.2 上验证；单独安装 Command Line Tools 的环境尚未验证。运行 JavaScript 测试还需要 Node.js。
@@ -33,7 +39,7 @@ scripts/build-app.sh
 open 'build/Subscription Meter.app'
 ```
 
-脚本生成 `build/Subscription Meter.app`，使用本地 ad-hoc 签名，未经 Apple 公证；首次打开时 macOS 可能要求在系统设置中允许打开。首次启动会显示设置窗口，之后从菜单栏图标进入详情与设置。该项目目前没有发布的安装包。
+脚本生成 `build/Subscription Meter.app`，使用本地 ad-hoc 签名，未经 Apple 公证；首次打开时 macOS 可能要求在系统设置中允许打开。首次启动会显示设置窗口，之后从菜单栏图标进入详情与设置。
 
 如需固定安装位置，先从菜单栏退出应用，然后将生成的 App 复制到 `~/Applications`。如果该位置已有同名 App，请先备份或移走旧版本；重新构建不会自动更新已安装的副本。登录时启动可在 App 设置中开启，建议先固定安装位置；如系统要求批准，请在系统登录项设置中确认。
 

@@ -20,6 +20,12 @@ UI screenshots are not yet available.
 
 Disable unwanted providers under 设置 → 服务 (Settings → Services). Availability depends on account and plan; private APIs and websites can change.
 
+## Download a nightly build
+
+Download the latest nightly prerelease from [GitHub Releases](https://github.com/greatbody/subscription-meter/releases), extract `Subscription-Meter-macOS-universal.zip`, and move the app to `~/Applications` before opening it. The universal app supports Intel and Apple Silicon on macOS 13 or later. It is ad-hoc signed and not notarized; macOS may require you to allow it in System Settings. To verify the ZIP, run `shasum -a 256 -c SHA256SUMS.txt` in the download directory.
+
+GitHub Actions builds the default branch daily at 19:23 UTC and can also be run manually. Each run creates a separate prerelease; nightly builds may contain unstable changes.
+
 ## Build from source
 
 Requires macOS 13 or later, an Apple toolchain supporting Swift 5.9, `sips`, `iconutil`, and `codesign`. The universal build targets Intel and Apple Silicon. It has been verified on an Intel Mac with Xcode 26.5 / Swift 6.3.2; a standalone Command Line Tools installation has not been verified. Node.js is needed for the JavaScript test.
@@ -33,7 +39,7 @@ scripts/build-app.sh
 open 'build/Subscription Meter.app'
 ```
 
-The script creates `build/Subscription Meter.app` with an ad-hoc signature; it is not notarized, so macOS may ask you to allow it in System Settings on first launch. Settings appear on first launch; subsequently click the menu bar item to open the panel and settings. There is currently no published installer.
+The script creates `build/Subscription Meter.app` with an ad-hoc signature; it is not notarized, so macOS may ask you to allow it in System Settings on first launch. Settings appear on first launch; subsequently click the menu bar item to open the panel and settings.
 
 For a fixed installation, quit the app from its menu, then copy the built app to `~/Applications`. Back up or move any existing app with the same name first. Rebuilding does not update an installed copy automatically. Enable 登录时启动 (launch at login) in the app's settings after choosing a stable location; approve it in macOS Login Items if requested.
 

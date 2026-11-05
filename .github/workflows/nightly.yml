@@ -1,0 +1,62 @@
+name: Nightly build
+
+on:
+  schedule:
+    # 03:23 Asia/Shanghai (UTC+8)
+    - cron: '23 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  nightly:
+    name: Build and publish nightly
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Run tests
+        run: |
+          Tests/run-settings-tests.sh
+          Tests/run-adapter-tests.sh
+          Tests/run-balance-ui-tests.sh
+          node Tests/silicon-dom-tests.js
+
+      - name: Build universal app
+        run: |
+          scripts/build-app.sh
+          lipo 'build/Subscription Meter.app/Contents/MacOS/SubscriptionMeter' -verify_arch arm64 x86_64
+          codesign --verify --deep --strict 'build/Subscription Meter.app'
+
+      - name: Package and checksum
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent 'build/Subscription Meter.app' 'dist/Subscription-Meter-macOS-universal.zip'
+          cd dist
+          shasum -a 256 Subscription-Meter-macOS-universal.zip > SHA256SUMS.txt
+          shasum -a 256 -c SHA256SUMS.txt
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          tag="nightly-$(date -u +%Y%m%d)-${RUN_ID}-${RUN_ATTEMPT}"
+          cat > dist/release-notes.md <<NOTES
+          Automated nightly build of commit ${COMMIT_SHA}.
+
+          The ZIP contains a universal macOS app for Intel and Apple Silicon (macOS 13+).
+          This build is ad-hoc signed and is not notarized by Apple. macOS may require
+          you to allow it in System Settings before opening it.
+          Verify the downloaded ZIP with SHA256SUMS.txt.
+          NOTES
+          gh release create "$tag" dist/Subscription-Meter-macOS-universal.zip dist/SHA256SUMS.txt \
+            --target "$COMMIT_SHA" --title "Nightly $tag" --notes-file dist/release-notes.md \
+            --prerelease --latest=false
