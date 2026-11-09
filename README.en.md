@@ -20,11 +20,13 @@ UI screenshots are not yet available.
 
 Disable unwanted providers under 设置 → 服务 (Settings → Services). Availability depends on account and plan; private APIs and websites can change.
 
-## Download a nightly build
+## Download
 
-Download the latest nightly prerelease from [GitHub Releases](https://github.com/greatbody/subscription-meter/releases), extract `Subscription-Meter-macOS-universal.zip`, and move the app to `~/Applications` before opening it. The universal app supports Intel and Apple Silicon on macOS 13 or later. It is ad-hoc signed and not notarized; macOS may require you to allow it in System Settings. To verify the ZIP, run `shasum -a 256 -c SHA256SUMS.txt` in the download directory.
+Download a stable release or nightly prerelease from [GitHub Releases](https://github.com/greatbody/subscription-meter/releases), extract `Subscription-Meter-macOS-universal.zip`, and move the app to `~/Applications` before opening it. The universal app supports Intel and Apple Silicon on macOS 13 or later. It is ad-hoc signed and not notarized; macOS may require you to allow it in System Settings. To verify the ZIP, run `shasum -a 256 -c SHA256SUMS.txt` in the download directory.
 
 GitHub Actions builds the default branch daily at 19:23 UTC and can also be run manually. Each run creates a separate prerelease; nightly builds may contain unstable changes.
+
+To publish a stable version, run the Release workflow in GitHub Actions with a version number and release notes. It runs the tests, builds the universal app, and publishes the release with a checksum file.
 
 ## Build from source
 

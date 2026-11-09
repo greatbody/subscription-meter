@@ -20,11 +20,13 @@ Subscription Meter 是一款原生 macOS 菜单栏应用，在一个地方查看
 
 可在“设置 → 服务”关闭不需要的服务。各服务返回的数据取决于账户和套餐；非公开接口或网页变更可能导致功能失效。
 
-## 下载 nightly 版本
+## 下载
 
-在 [GitHub Releases](https://github.com/greatbody/subscription-meter/releases) 下载最新的 nightly 预发布版本，解压 `Subscription-Meter-macOS-universal.zip`，将 App 移到 `~/Applications` 后打开。该通用版本支持 Intel 和 Apple Silicon，要求 macOS 13 或更高版本。构建为 ad-hoc 签名，未经 Apple 公证；首次打开时 macOS 可能要求在系统设置中允许打开。可在下载目录运行 `shasum -a 256 -c SHA256SUMS.txt` 校验 ZIP。
+在 [GitHub Releases](https://github.com/greatbody/subscription-meter/releases) 下载正式版或 nightly 预发布版本，解压 `Subscription-Meter-macOS-universal.zip`，将 App 移到 `~/Applications` 后打开。该通用版本支持 Intel 和 Apple Silicon，要求 macOS 13 或更高版本。构建为 ad-hoc 签名，未经 Apple 公证；首次打开时 macOS 可能要求在系统设置中允许打开。可在下载目录运行 `shasum -a 256 -c SHA256SUMS.txt` 校验 ZIP。
 
 GitHub Actions 每天北京时间 03:23 构建默认分支，也可手动触发；每次运行生成独立的预发布版本。nightly 可能包含尚未稳定的变更。
+
+正式版本使用 GitHub Actions 的 Release 工作流手动发布：填写版本号和发布说明，工作流会运行测试、构建通用 App 并发布带校验文件的版本。
 
 ## 从源码构建
 
