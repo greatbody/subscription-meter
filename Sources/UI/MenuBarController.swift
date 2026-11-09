@@ -11,7 +11,9 @@ final class MenuBarController: NSObject, ObservableObject {
     private let item: NSStatusItem
     private var statusView: NSHostingView<StatusContent>?
     private let popover = NSPopover()
-    private var timer: Timer?
+    private var rotationTimer: Timer?
+    private var frameTimer: Timer?
+    private var animationEnds = Date.distantPast
     private var subscriptions = Set<AnyCancellable>()
     private var lastAdvance = Date()
     private let onRefresh: () -> Void
@@ -63,29 +65,56 @@ final class MenuBarController: NSObject, ObservableObject {
         }
         popover.contentViewController = NSHostingController(rootView: PanelContent(controller: self))
         settings.objectWillChange.receive(on: RunLoop.main).sink { [weak self] _ in
-            DispatchQueue.main.async { self?.updateWidth() }
+            DispatchQueue.main.async { self?.updateDisplay() }
         }.store(in: &subscriptions)
-        updateWidth()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.advanceIfNeeded()
-                self?.updateStatusImage()
-            }
-        }
+        updateDisplay()
     }
     func update(_ providers: [ProviderUsage]) {
         self.providers = providers
         if index >= entries.count { index = 0 }
-        updateWidth()
+        updateDisplay()
     }
-    private func updateWidth() {
+    private func updateDisplay() {
         item.length = 20 + 12 + (settings.useProviderIcons ? 0 : 5 + CGFloat(settings.nameWidth))
+        scheduleRotation()
+        startFrames()
     }
-    private func advanceIfNeeded() {
-        guard entries.count > 1, Date().timeIntervalSince(lastAdvance) >= settings.rotationInterval else { return }
+    private func scheduleRotation() {
+        rotationTimer?.invalidate()
+        guard entries.count > 1 else { return }
+        let delay = max(0.01, settings.rotationInterval - Date().timeIntervalSince(lastAdvance))
+        rotationTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            Task { @MainActor in self?.advance() }
+        }
+    }
+    private func advance() {
+        guard entries.count > 1 else { return }
         let next = (index + 1) % entries.count
         withAnimation(.easeInOut(duration: 0.35)) { index = next }
         lastAdvance = Date()
+        animationEnds = lastAdvance.addingTimeInterval(0.45)
+        scheduleRotation()
+        startFrames()
+    }
+    private var needsMarqueeFrames: Bool {
+        guard !settings.useProviderIcons, let entry = current else { return false }
+        let width = settings.nameWidth - ((entry.usage.balance?.amounts.count ?? 0) > 1 ? 30 : 0)
+        return (title(entry.usage.provider) as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium)]).width > width
+    }
+    private func startFrames() {
+        // Allow SwiftUI to apply state and layout changes before capturing the image.
+        animationEnds = max(animationEnds, Date().addingTimeInterval(0.45))
+        guard frameTimer == nil else { return }
+        frameTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.updateStatusImage()
+                if Date() >= self.animationEnds && !self.needsMarqueeFrames {
+                    self.frameTimer?.invalidate()
+                    self.frameTimer = nil
+                }
+            }
+        }
     }
     // A native image is replicated reliably to the other menu bars.
     private func updateStatusImage() {
