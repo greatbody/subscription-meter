@@ -26,7 +26,7 @@ Download a stable release or nightly prerelease from [GitHub Releases](https://g
 
 GitHub Actions builds the default branch daily at 19:23 UTC and can also be run manually. Each run creates a separate prerelease; nightly builds may contain unstable changes.
 
-Push a version tag such as `v1.0.0` to trigger the Release workflow. It runs the tests, builds the universal app, generates release notes since the previous stable release, and publishes the release with a checksum file. The first release has no previous stable release to compare against.
+Push a version tag such as `v1.0.0` to trigger the Release workflow. It runs the tests, builds the universal app, and uses the repository's `OPENAI_API_KEY` Actions secret to summarize commit subjects in Chinese and English, retaining the commit list. If the key is missing or the request fails, it publishes the commit list alone. Commit subjects are sent to OpenAI, and API charges may apply. The first release has no previous version tag to compare against.
 
 ## Build from source
 

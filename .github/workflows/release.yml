@@ -53,20 +53,34 @@ jobs:
           shasum -a 256 Subscription-Meter-macOS-universal.zip > SHA256SUMS.txt
           shasum -a 256 -c SHA256SUMS.txt
 
+      - name: Prepare release notes
+        env:
+          TAG: ${{ github.ref_name }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$TAG^" 2>/dev/null || true)
+          if [[ -n "$previous" ]]; then
+            range="$previous..$TAG"
+            heading="Changes since $previous"
+          else
+            range="$TAG"
+            heading='Changes in the first release'
+          fi
+          git log "$range" --no-merges --format='- %s' > dist/commits.txt
+          if python3 scripts/summarize-release.py dist/commits.txt dist/summary.md; then
+            cat dist/summary.md > dist/release-notes.md
+            printf '\n\n' >> dist/release-notes.md
+          else
+            : > dist/release-notes.md
+          fi
+          printf '## %s\n\n' "$heading" >> dist/release-notes.md
+          cat dist/commits.txt >> dist/release-notes.md
+          printf '\n\nUniversal macOS app for Intel and Apple Silicon (macOS 13+). Ad-hoc signed and not notarized; macOS may require approval in System Settings. Verify the ZIP using SHA256SUMS.txt.\n' >> dist/release-notes.md
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$TAG^" 2>/dev/null || true)
-          if [[ -n "$previous" ]]; then
-            range="$previous..$TAG"
-            printf '## Changes since %s\n\n' "$previous" > dist/release-notes.md
-          else
-            range="$TAG"
-            printf '## Changes in the first release\n\n' > dist/release-notes.md
-          fi
-          git log "$range" --no-merges --format='- %s' >> dist/release-notes.md
-          printf '\n\nUniversal macOS app for Intel and Apple Silicon (macOS 13+). Ad-hoc signed and not notarized; macOS may require approval in System Settings. Verify the ZIP using SHA256SUMS.txt.\n' >> dist/release-notes.md
           gh release create "$TAG" dist/Subscription-Meter-macOS-universal.zip dist/SHA256SUMS.txt \
             --verify-tag --title "Subscription Meter $TAG" --notes-file dist/release-notes.md --latest
