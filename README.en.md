@@ -26,7 +26,7 @@ Download a stable release or nightly prerelease from [GitHub Releases](https://g
 
 GitHub Actions builds the default branch daily at 19:23 UTC and can also be run manually. Each run creates a separate prerelease; nightly builds may contain unstable changes.
 
-To publish a stable version, run the Release workflow in GitHub Actions with a version number and release notes. It runs the tests, builds the universal app, and publishes the release with a checksum file.
+Push a version tag such as `v1.0.0` to trigger the Release workflow. It runs the tests, builds the universal app, generates release notes since the previous stable release, and publishes the release with a checksum file. The first release has no previous stable release to compare against.
 
 ## Build from source
 

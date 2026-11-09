@@ -1,16 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (for example, 1.0.0)'
-        required: true
-        type: string
-      notes:
-        description: 'Release notes'
-        required: true
-        type: string
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -27,13 +20,9 @@ jobs:
 
       - name: Validate version
         env:
-          VERSION: ${{ inputs.version }}
-          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
         run: |
-          [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo 'Expected a version like 1.0.0'; exit 1; }
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v$VERSION" >/dev/null 2>&1; then
-            echo "Tag v$VERSION already exists"; exit 1
-          fi
+          [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo 'Expected a tag like v1.0.0'; exit 1; }
 
       - name: Run tests
         run: |
@@ -44,10 +33,11 @@ jobs:
 
       - name: Build universal app
         env:
-          VERSION: ${{ inputs.version }}
+          TAG: ${{ github.ref_name }}
         run: |
           scripts/build-app.sh
           app='build/Subscription Meter.app'
+          VERSION="${TAG#v}"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$app/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$app/Contents/Info.plist"
           codesign --force --sign - "$app"
@@ -65,10 +55,8 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-          NOTES: ${{ inputs.notes }}
-          COMMIT_SHA: ${{ github.sha }}
+          TAG: ${{ github.ref_name }}
         run: |
-          printf '%s\n\n%s\n' "$NOTES" 'Universal macOS app for Intel and Apple Silicon (macOS 13+). Ad-hoc signed and not notarized; macOS may require approval in System Settings. Verify the ZIP using SHA256SUMS.txt.' > dist/release-notes.md
-          gh release create "v$VERSION" dist/Subscription-Meter-macOS-universal.zip dist/SHA256SUMS.txt \
-            --target "$COMMIT_SHA" --title "Subscription Meter v$VERSION" --notes-file dist/release-notes.md --latest
+          gh release create "$TAG" dist/Subscription-Meter-macOS-universal.zip dist/SHA256SUMS.txt \
+            --verify-tag --title "Subscription Meter $TAG" --generate-notes --latest \
+            --notes 'Universal macOS app for Intel and Apple Silicon (macOS 13+). Ad-hoc signed and not notarized; macOS may require approval in System Settings. Verify the ZIP using SHA256SUMS.txt.'
