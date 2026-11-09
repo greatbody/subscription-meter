@@ -61,6 +61,8 @@ DEEPSEEK_API_KEY=your_api_key_here
 
 Usage rings turn orange at 70% and red at 90%; missing data or a connection error is grey, while a balance service explicitly reporting unavailable is red. Some weekly and monthly windows also show the gap between elapsed time and usage in grey. Settings control labels, rotation, and refresh intervals.
 
+The menu bar stops high-frequency redrawing while its display is static to reduce CPU usage and energy consumption. Rotation animations and scrolling provider names remain animated.
+
 Under 设置 → 余额 (Settings → Balances), set a positive reference capacity separately for DeepSeek and SiliconFlow. The blue ring represents balance relative to that number; above capacity it becomes a full gold ring. Currencies are neither converted nor combined. DeepSeek supports separate CNY and USD low-balance thresholds, shown in the panel without system notifications.
 
 ## Development and verification
